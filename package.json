@@ -1,6 +1,6 @@
 {
   "name": "devbricksjs",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "DevBricks JS provides several classes which will be usually used in every day Node.js development.",
   "main": "index.js",
   "scripts": {
@@ -23,6 +23,7 @@
   "homepage": "https://github.com/dailystudio/devbricksjs#readme",
   "dependencies": {
     "firebase": "^7.9.1",
-    "firebase-admin": "^8.9.2"
+    "firebase-admin": "^8.9.2",
+    "luxon": "^1.22.0"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "devbricksjs",
+  "name": "devbricks-js",
   "version": "0.5.5",
   "description": "DevBricks JS provides several classes which will be usually used in every day Node.js development.",
   "main": "index.js",
@@ -16,7 +16,7 @@
     "firebase"
   ],
   "author": "dailystudio",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/dailystudio/devbricksjs/issues"
   },

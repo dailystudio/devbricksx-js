@@ -1,6 +1,6 @@
 {
   "name": "devbricksjs",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "DevBricks JS provides several classes which will be usually used in every day Node.js development.",
   "main": "index.js",
   "scripts": {

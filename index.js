@@ -1,3 +1,3 @@
-exports.development.logger = require('./development/logger.js');
-exports.firebase.firestore = require('./firebase/firestoreutils.js');
-exports.firebase.storage = require('./firebase/firebasestorageutils.js');
+exports.logger = require('./development/logger.js');
+exports.firestore = require('./firebase/firestoreutils.js');
+exports.firebaseStorage = require('./firebase/firebasestorageutils.js');

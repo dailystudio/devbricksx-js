@@ -5,8 +5,6 @@ const request   = require('request');
 const URL       = require("url");
 const logger    = require('../development/logger.js');
 
-const bucket = admin.storage().bucket();
-
 const CACHE_DIR = './caches';
 
 if (!fs.existsSync(CACHE_DIR)) {
@@ -21,8 +19,10 @@ module.exports = {
                 reject('image file is empty');
             }
 
-            var newFileName = `${directory}/${file.filename}`;
+            let newFileName = `${directory}/${file.filename}`;
             logger.debug('filename on firebase storage: ' + newFileName);
+
+            let bucket = firebase.storage();
 
             bucket.upload(file.path, {
                 destination: newFileName,
@@ -49,6 +49,8 @@ module.exports = {
                 action: 'read',
                 expires: '03-17-2025'
             };
+
+            let bucket = firebase.storage();
 
             bucket.file(remoteFile).getSignedUrl(config, function (err, url) {
                 console.log('download url: ' + url);

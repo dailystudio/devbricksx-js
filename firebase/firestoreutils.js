@@ -1,6 +1,7 @@
 const admin         = require('firebase-admin');
 const { DateTime }  = require("luxon");
 const logger        = require('../development/logger.js');
+const firebase      = require('./firebase.js');
 
 module.exports = {
 
@@ -10,7 +11,9 @@ module.exports = {
             return undefined;
         }
 
-        let rootRef = admin.firestore().collection(collection);
+        let firestore = firebase.firestore();
+
+        let rootRef = firestore.collection(collection);
         let dbActions = [];
         objects.forEach(function (o) {
             if (rootRef) {
@@ -46,7 +49,9 @@ module.exports = {
     getDocumentInDatabase: function (collection, document) {
         logger.debug(`get document[${document}] in collection: ${collection}`);
 
-        let dbRef = admin.firestore().collection(collection).doc(document);
+        let firestore = firebase.firestore();
+
+        let dbRef = firestore.collection(collection).doc(document);
 
         return new Promise(function(resolve) {
             dbRef.get().then(function (snapshot) {
@@ -67,7 +72,9 @@ module.exports = {
     queryInDatabase: function (queries, collection, orderBys) {
         logger.debug(`query in database: [${JSON.stringify(queries)}], collection: ${collection}`);
 
-        let dbRef = admin.firestore().collection(collection);
+        let firestore = firebase.firestore();
+
+        let dbRef = firestore.collection(collection);
 
         let ref = dbRef;
         if (queries) {
@@ -105,7 +112,10 @@ module.exports = {
 
     deleteCollection: function (queries, collection) {
         logger.debug(`delete collection ${collection} with query: ${JSON.stringify(queries)}`);
-        let dbRef = admin.firestore().collection(collection);
+
+        let firestore = firebase.firestore();
+
+        let dbRef = firestore.collection(collection);
 
         let ref = dbRef;
         if (queries) {
@@ -142,6 +152,7 @@ module.exports = {
 };
 
 function deleteQueryBatch(dbRef, batchSize, resolve, reject) {
+
     dbRef.get()
         .then((snapshot) => {
             // When there are no documents left, we are done
@@ -149,8 +160,10 @@ function deleteQueryBatch(dbRef, batchSize, resolve, reject) {
                 return 0;
             }
 
+            let firestore = firebase.firestore();
+
             // Delete documents in a batch
-            let batch = admin.firestore().batch();
+            let batch = firestore.batch();
             snapshot.docs.forEach((doc) => {
                 batch.delete(doc.ref);
             });

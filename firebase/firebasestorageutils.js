@@ -1,8 +1,6 @@
 const fs        = require('fs');
 const path      = require('path');
-const admin     = require('firebase-admin');
 const request   = require('request');
-const URL       = require("url");
 const logger    = require('../development/logger.js');
 
 const CACHE_DIR = './caches';
@@ -43,17 +41,41 @@ module.exports = {
         })
     },
 
-    downloadFile: function (remoteFile) {
+    downloadFile: async function (remoteFile) {
+        const config = {
+            action: 'read',
+            expires: '03-17-2025'
+        };
+
+        let bucket = firebase.storage();
+
+        let md5Hash = null;
+        let fileSize = 0;
+        let metadata = await bucket.file(remoteFile).getMetadata();
+        if (metadata) {
+            md5Hash = metadata[0].md5Hash;
+            fileSize = parseInt(metadata[0].size || '');
+        }
+
+        let cacheFilename = getCacheFilenameFromRemotePath(remoteFile, md5Hash, fileSize);
+        let cacheFilePath = path.join(CACHE_DIR, cacheFilename);
+        logger.debug('local file path: ' + cacheFilePath);
+
+        if (fs.existsSync(cacheFilePath)) {
+            logger.info(`cache file found for [${remoteFile}]: ${cacheFilePath}`);
+
+            let cacheFileSize = fs.statSync(cacheFilePath).size;
+            logger.debug(`cache file size: ${fileSize}`);
+            if (cacheFileSize === fileSize) {
+                logger.info(`cache matched: file = ${cacheFilePath}, size = ${cacheFileSize}`);
+
+                return cacheFilePath;
+            }
+        }
+
         return new Promise(function (resolve, reject) {
-            const config = {
-                action: 'read',
-                expires: '03-17-2025'
-            };
-
-            let bucket = firebase.storage();
-
             bucket.file(remoteFile).getSignedUrl(config, function (err, url) {
-                console.log('download url: ' + url);
+                logger.debug('download url: ' + url);
                 if (err) {
                     logger.error('download failed: ' + err);
                     reject(err);
@@ -61,34 +83,20 @@ module.exports = {
                     return;
                 }
 
-                let cacheFilename = getCacheFilenameFromDownloadUrl(url);
-                let cacheFilePath = path.join(CACHE_DIR, cacheFilename);
-                logger.debug('local file path: ' + cacheFilePath);
-
-                if (fs.existsSync(cacheFilePath)) {
-                    logger.info(`cache file found for [${remoteFile}]: ${cacheFilePath}`);
-
-                    resolve(cacheFilePath);
-
-                    return;
-                }
-
                 let file = fs.createWriteStream(cacheFilePath);
 
                 return request.get(url)
-                    .on('end', function () {
-                        resolve(cacheFilePath)
-                    })
-                    .pipe(file);
+                    .pipe(file)
+                    .on('finish', function () {
+                        resolve(cacheFilePath);
+                    });
             });
         });
     }
 
 };
 
-function getCacheFilenameFromDownloadUrl(url) {
-    let path = URL.parse(url).pathname;
-    let segments = path.split('/');
-
-    return segments[segments.length - 1];
+function getCacheFilenameFromRemotePath(remotePath, md5Hash, fileSize) {
+    return encodeURIComponent(remotePath)
+        + '.' + md5Hash + '.' + fileSize;
 }

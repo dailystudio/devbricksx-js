@@ -53,7 +53,7 @@ module.exports = {
         let fileSize = 0;
         let metadata = await bucket.file(remoteFile).getMetadata();
         if (metadata) {
-            md5Hash = metadata[0].md5Hash;
+            md5Hash = Buffer.from(metadata[0].md5Hash).toString('base64');
             fileSize = parseInt(metadata[0].size || '');
         }
 

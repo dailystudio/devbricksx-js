@@ -2,7 +2,7 @@ let logger = require("../development/logger.js");
 
 module.exports = {
 
-    responseError: function (code, message, res) {
+    responseError: function (res, code, message) {
         let error = {
             code: code,
             message: message

@@ -4,3 +4,4 @@ exports.firestore = require('./firebase/firestoreutils.js');
 exports.firebaseStorage = require('./firebase/firebasestorageutils.js');
 exports.apilock = require('./async/apilock.js');
 exports.resputils = require('./utils/resputils.js');
+exports.requtils = require('./utils/requtils.js');

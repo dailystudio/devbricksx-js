@@ -1,5 +1,5 @@
 {
-  "name": "devbricks-js",
+  "name": "devbricksx-js",
   "version": "0.5.13",
   "description": "DevBricks JS provides several classes which will be usually used in every day Node.js development.",
   "main": "index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dailystudio/devbricksjs.git"
+    "url": "git+https://github.com/dailystudio/devbricksx-js.git"
   },
   "keywords": [
     "nodejs",
@@ -18,9 +18,9 @@
   "author": "dailystudio",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/dailystudio/devbricksjs/issues"
+    "url": "https://github.com/dailystudio/devbricksx-js/issues"
   },
-  "homepage": "https://github.com/dailystudio/devbricksjs#readme",
+  "homepage": "https://github.com/dailystudio/devbricksx-js#readme",
   "dependencies": {
     "async-lock": "^1.2.2",
     "firebase": "^7.9.1",

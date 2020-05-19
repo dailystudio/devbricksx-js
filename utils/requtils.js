@@ -3,6 +3,21 @@ let resputils   = require("./resputils.js");
 
 module.exports = {
 
+    dumpRequestInfo: function (req, parameters) {
+        let info = {};
+        if (!(parameters instanceof Array)) {
+            logger.error(`parameters should be a Array object`);
+
+            return info;
+        }
+
+        for (let [target, param] of parameters) {
+            info[`${target}[${param}]`] = (req[target][param] ? req[target][param] : null);
+        }
+
+        return info;
+    },
+
     checkParametersOrResponseError: function (req, res, parameters) {
         let allFound = true;
 

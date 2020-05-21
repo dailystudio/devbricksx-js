@@ -6,3 +6,4 @@ exports.apilock = require('./async/apilock.js');
 exports.locker = require('./async/locker.js');
 exports.resputils = require('./utils/resputils.js');
 exports.requtils = require('./utils/requtils.js');
+exports.fileutils = require('./utils/fileutils.js');

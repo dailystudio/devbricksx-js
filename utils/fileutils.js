@@ -14,13 +14,23 @@ module.exports = {
     },
 
     jsonFromFile: function (file) {
-        let content = this.strFromFile(file)
+        let content = this.strFromFile(file);
         if (content == null) {
             logger.error(`[ERROR]: json file [${file}] is empty.`);
             return
         }
 
         return JSON.parse(content.toString());
-    }
+    },
+
+    strToFile: function (str, file) {
+        fs.writeFileSync(file, str);
+    },
+
+    jsonToFile: function (json, file) {
+        let str = JSON.stringify(json, null, '\t');
+
+        this.strToFile(str, file)
+    },
 
 };

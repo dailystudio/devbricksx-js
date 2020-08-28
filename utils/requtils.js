@@ -48,4 +48,24 @@ module.exports = {
         return allFound;
     },
 
+    parseIntOrResponseError: function (req, target, parameter, res) {
+        let parsedValue = parseInt(req[target][parameter], 10);
+        if (isNaN(parsedValue)) {
+            resputils.responseError(res, 400,
+                `failed to parse integer from [${parameter}] in ${target}`);
+        }
+
+        return parsedValue;
+    },
+
+    parseFloatOrResponseError: function (req, target, parameter, res) {
+        let parsedValue = parseFloat(req[target][parameter]);
+        if (isNaN(parsedValue)) {
+            this.responseError(res,400,
+                `failed to parse float from [${parameter}] in ${target}`);
+        }
+
+        return parsedValue;
+    },
+
 };

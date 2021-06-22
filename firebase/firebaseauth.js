@@ -7,12 +7,12 @@ module.exports = {
     validateFirebaseIdToken: function (req, res, next) {
         let authPrompt = 'No Firebase ID token was passed as a Bearer token in the Authorization header.' +
             'Make sure you authorize your request by providing the following HTTP header:' +
-            'Authorization: Bearer <Firebase ID Token>' +
-            'or by passing a "__session" cookie.'
+            'Authorization: Bearer <Firebase ID Token> ' +
+            'or by passing a __session cookie.'
 
         if ((!req.headers.authorization
             || !req.headers.authorization.startsWith('Bearer ')) && !req.cookies.__session) {
-            logger.error('No Firebase ID token was found');
+            logger.error(`No Firebase ID token was found. ${req.path}`);
 
             return resputils.responseError(res, 403, authPrompt)
         }

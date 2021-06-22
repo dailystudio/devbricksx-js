@@ -28,7 +28,7 @@ module.exports = {
             idToken = req.cookies.__session;
         }
 
-        firebase.auth.verifyIdToken(idToken).then((decodedIdToken) => {
+        firebase.auth().verifyIdToken(idToken).then((decodedIdToken) => {
             logger.info('ID Token correctly decoded', decodedIdToken);
             req.user = decodedIdToken;
             return next();

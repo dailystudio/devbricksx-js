@@ -21,6 +21,10 @@ module.exports = {
 
     storage: function () {
         return this._firebaseAdmin().bucket();
+    },
+
+    auth: function () {
+        return this._firebaseAdmin().auth();
     }
 
 };

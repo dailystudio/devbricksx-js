@@ -110,6 +110,21 @@ module.exports = {
         });
     },
 
+    queryOneInDatabase: async function (key, value, collection) {
+        let queries = this.getQueryForPrimaryKey(key, value);
+
+        return new Promise(function (resolve){
+            this.queryInDatabase(queries, collection).then(function (objects) {
+                logger.debug(`objects [${key}: ${value}] found in collection [${collection}] : ${JSON.stringify(objects)}`);
+                if (objects && objects.length > 0) {
+                    resolve(objects[0]);
+                } else {
+                    resolve(null)
+                }
+            })
+        });
+    },
+
     deleteCollection: function (queries, collection) {
         logger.debug(`delete collection ${collection} with query: ${JSON.stringify(queries)}`);
 

@@ -5,9 +5,6 @@ const logger    = require('../development/logger.js');
 
 const CACHE_DIR = './caches';
 
-if (!fs.existsSync(CACHE_DIR)) {
-    fs.mkdirSync(CACHE_DIR)
-}
 
 module.exports = {
 
@@ -60,6 +57,10 @@ module.exports = {
         let cacheFilename = getCacheFilenameFromRemotePath(remoteFile, md5Hash, fileSize);
         let cacheFilePath = path.join(CACHE_DIR, cacheFilename);
         logger.debug('local file path: ' + cacheFilePath);
+
+        if (!fs.existsSync(CACHE_DIR)) {
+            fs.mkdirSync(CACHE_DIR)
+        }
 
         if (fs.existsSync(cacheFilePath)) {
             logger.info(`cache file found for [${remoteFile}]: ${cacheFilePath}`);

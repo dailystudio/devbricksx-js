@@ -1,4 +1,3 @@
-const admin         = require('firebase-admin');
 const { DateTime }  = require("luxon");
 const logger        = require('../development/logger.js');
 const firebase      = require('./firebase.js');

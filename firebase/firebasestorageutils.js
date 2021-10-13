@@ -1,7 +1,8 @@
-const fs        = require('fs');
-const path      = require('path');
-const request   = require('request');
-const logger    = require('../development/logger.js');
+const fs            = require('fs');
+const path          = require('path');
+const request       = require('request');
+const logger        = require('../development/logger.js');
+const firebase      = require('./firebase.js');
 
 const CACHE_DIR = './caches';
 
@@ -11,7 +12,7 @@ module.exports = {
     uploadFile: function (file, directory) {
         return new Promise(function (resolve, reject) {
             if (!file) {
-                reject('image file is empty');
+                reject('update file is empty');
             }
 
             let newFileName = `${directory}/${file.filename}`;

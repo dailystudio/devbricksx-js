@@ -20,7 +20,7 @@ module.exports = {
     },
 
     storage: function () {
-        return this._firebaseAdmin().bucket();
+        return this._firebaseAdmin().storage().bucket();
     },
 
     auth: function () {

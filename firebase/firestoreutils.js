@@ -125,6 +125,22 @@ module.exports = {
         });
     },
 
+    deleteDocument: function (docId, collection) {
+        logger.debug(`delete document [${docId}] from collection [${collection}]`);
+
+        let firestore = firebase.firestore();
+
+        return new Promise((resolve, reject) => {
+            firestore.collection(collection).doc(docId).delete().then(function () {
+                logger.debug(`document [${docId}] is deleted successfully.`)
+                resolve();
+            }).catch(function (e) {
+                logger.error(`failed to delete document [${docId}]: ${e}`);
+                reject(e)
+            });
+        });
+    },
+
     deleteCollection: function (queries, collection) {
         logger.debug(`delete collection ${collection} with query: ${JSON.stringify(queries)}`);
 

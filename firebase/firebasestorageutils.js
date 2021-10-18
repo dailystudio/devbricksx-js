@@ -18,7 +18,7 @@ module.exports = {
             let newFileName = `${directory}/${file.filename}`;
             logger.debug('filename on firebase storage: ' + newFileName);
 
-            let bucket = firebase.storage();
+            let bucket = firebase.storage().bucket();
 
             bucket.upload(file.path, {
                 destination: newFileName,
@@ -45,7 +45,7 @@ module.exports = {
             expires: '03-17-2025'
         };
 
-        let bucket = firebase.storage();
+        let bucket = firebase.storage().bucket();
 
         let md5Hash = null;
         let fileSize = 0;

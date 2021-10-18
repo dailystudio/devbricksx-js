@@ -10,9 +10,9 @@ module.exports = {
             'Authorization: Bearer <Firebase ID Token> ' +
             'or by passing a __session cookie.'
 
-        if ((!req.headers.authorization
-            || !req.headers.authorization.startsWith('Bearer ')) && !req.cookies.__session) {
-            logger.error(`No Firebase ID token was found. ${req.path}`);
+        if (!(req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
+            || req.cookies && req.cookies.__session)) {
+            logger.error(`No Bypass token was found.`);
 
             return resputils.responseError(res, 403, authPrompt)
         }

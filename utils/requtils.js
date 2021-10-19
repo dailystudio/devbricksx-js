@@ -48,8 +48,16 @@ module.exports = {
         return allFound;
     },
 
+    parseArray: function (strOfArray, delimiter = ',') {
+        return strOfArray.split(delimiter).map(p => p.trim());
+    },
+
     parseArrayOrResponseError: function (req, target, parameter, delimiter = ',', res) {
-        let parsedValue = req[target][parameter].split(delimiter).map(p => p.trim());
+        if (!req[target][parameter]) {
+            return null;
+        }
+
+        let parsedValue = this.parseArray(req[target][parameter], delimiter);
         if (!(parsedValue instanceof Array)) {
             resputils.responseError(res, 400,
                 `failed to parse array from [${parameter}] in ${target}`);

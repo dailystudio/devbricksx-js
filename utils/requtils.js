@@ -52,7 +52,7 @@ module.exports = {
         return strOfArray.split(delimiter).map(p => p.trim());
     },
 
-    parseArrayOrResponseError: function (req, target, parameter, delimiter = ',', res) {
+    parseArrayOrResponseError: function (req, target, parameter, res, delimiter = ',') {
         if (!req[target][parameter]) {
             return null;
         }

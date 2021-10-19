@@ -53,6 +53,8 @@ module.exports = {
         if (!(parsedValue instanceof Array)) {
             resputils.responseError(res, 400,
                 `failed to parse array from [${parameter}] in ${target}`);
+
+            return null;
         }
 
         return parsedValue;

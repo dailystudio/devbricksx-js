@@ -48,6 +48,16 @@ module.exports = {
         return allFound;
     },
 
+    parseArrayOrResponseError: function (req, target, parameter, delimiter = ',', res) {
+        let parsedValue = req[target][parameter].split(delimiter).map(p => p.trim());
+        if (!(parsedValue instanceof Array)) {
+            resputils.responseError(res, 400,
+                `failed to parse array from [${parameter}] in ${target}`);
+        }
+
+        return parsedValue;
+    },
+
     parseIntOrResponseError: function (req, target, parameter, res) {
         let parsedValue = parseInt(req[target][parameter], 10);
         if (isNaN(parsedValue)) {

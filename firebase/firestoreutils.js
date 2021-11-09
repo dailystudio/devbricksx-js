@@ -90,28 +90,32 @@ module.exports = {
         }
     },
 
-    getDocumentInDatabase: function (collection, document) {
-        logger.debug(`get document[${document}] in collection: ${collection}`);
+    getDocumentInDatabase: async function (collection, docId, transaction) {
+        logger.debug(`get document [${docId}] in collection [${transaction != null}]: ${collection}`);
 
         let firestore = firebase.firestore();
 
-        let dbRef = firestore.collection(collection).doc(document);
+        let dbRef = firestore.collection(collection).doc(docId);
 
-        return new Promise(function(resolve) {
-            dbRef.get().then(function (snapshot) {
-                if (snapshot.exists) {
-                    let o = snapshot.data();
+        let snapshot = null;
+        if (transaction) {
+            snapshot = await transaction.get(dbRef);
+        } else {
+            snapshot = await dbRef.get();
+        }
 
-                    o.id = snapshot.id;
-                    logger.debug(`found object[${snapshot.id}]: ${JSON.stringify(o)}`);
+        if (!snapshot.exists) {
+            return null;
+        }
 
-                    resolve(o);
-                } else {
-                    resolve(null);
-                }
-            })
-        });
+        let object = snapshot.data();
+
+        logger.debug(`found object[${snapshot.id}]: ${JSON.stringify(object)}`);
+        object.id = snapshot.id;
+
+        return object;
     },
+
 
     paginateQueryInDatabase: function (queries, collection, orderBys, limit, startAfterKeys) {
         logger.debug(`paginate in ${collection}: queries = [${JSON.stringify(queries)}]`);

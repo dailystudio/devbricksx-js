@@ -81,7 +81,7 @@ module.exports = {
     parseFloatOrResponseError: function (req, target, parameter, res) {
         let parsedValue = parseFloat(req[target][parameter]);
         if (isNaN(parsedValue)) {
-            this.responseError(res,400,
+            resputils.responseError(res,400,
                 `failed to parse float from [${parameter}] in ${target}`);
         }
 
@@ -91,7 +91,7 @@ module.exports = {
     parseLongOrResponseError: function (req, target, parameter, res) {
         let parsedValue = Number(req[target][parameter]);
         if (isNaN(parsedValue)) {
-            this.responseError(res,400,
+            resputils.responseError(res,400,
                 `failed to parse float from [${parameter}] in ${target}`);
         }
 

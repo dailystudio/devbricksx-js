@@ -92,7 +92,7 @@ module.exports = {
         let parsedValue = Number(req[target][parameter]);
         if (isNaN(parsedValue)) {
             resputils.responseError(res,400,
-                `failed to parse float from [${parameter}] in ${target}`);
+                `failed to parse long from [${parameter}] in ${target}`);
         }
 
         return parsedValue;

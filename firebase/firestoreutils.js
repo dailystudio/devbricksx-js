@@ -40,6 +40,8 @@ module.exports = {
                 }
             }
         }
+
+        return objects;
     },
 
     insertOrUpdateAllInDatabase: async function (objects, collection, transaction) {
@@ -88,6 +90,8 @@ module.exports = {
                 }
             }
         }
+
+        return objects;
     },
 
     getDocumentInDatabase: async function (collection, docId, transaction) {

@@ -48,6 +48,22 @@ module.exports = {
         return allFound;
     },
 
+    checkMethodsOrResponseError: function (req, res, methods) {
+        if (!(methods instanceof Array)) {
+            logger.error(`methods should be a Array object`);
+
+            return false;
+        }
+
+        if (!methods.includes(req.method)) {
+            resputils.responseError(res, 405, `${req.method} are NOT allowed.`);
+
+            return false;
+        }
+
+        return true;
+    },
+
     parseArray: function (strOfArray, delimiter = ',') {
         return strOfArray.split(delimiter).map(p => p.trim());
     },

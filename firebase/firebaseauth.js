@@ -29,9 +29,9 @@ module.exports = {
         }
 
         firebase.auth().verifyIdToken(idToken).then((decodedIdToken) => {
-            logger.info('ID Token correctly decoded', decodedIdToken);
+            logger.info(`ID Token correctly decoded: ${decodedIdToken}`);
             req.user = decodedIdToken;
-            return next();
+            return next(req, res);
         }).catch((error) => {
             logger.error('Error while verifying Firebase ID token:', error);
 

@@ -149,7 +149,7 @@ module.exports = {
         }
 
         if (limit) {
-            ref = ref.limit(limit)
+            ref = ref.limit(limit + 1)
         }
 
         if (startAfterKeys) {
@@ -167,7 +167,18 @@ module.exports = {
                 });
 
                 logger.debug(`found ${objects.length} objects.`);
-                resolve(objects);
+                if (limit) {
+                    let endOfPagination = (objects.length < limit + 1);
+                    resolve({
+                        data: objects.slice(0, limit),
+                        endOfPagination: endOfPagination,
+                    })
+                } else {
+                    resolve({
+                        data: objects,
+                        endOfPagination: true,
+                    })
+                }
             })
         });
     },

@@ -4,8 +4,18 @@ const firebase      = require('./firebase.js');
 
 module.exports = {
 
-    addAllToDatabase: async function (objects, collection) {
-        logger.info(`add to database: [${JSON.stringify(objects)}], collection: ${collection}`);
+    runInTransaction: async function (funcInTransaction, transaction = null) {
+        if (transaction) {
+            return await funcInTransaction(transaction);
+        } else {
+            return await firebase.firestore().runTransaction(async (t) => {
+                return await funcInTransaction(t);
+            });
+        }
+    },
+
+    addAllToDatabase: async function (objects, collection, transaction) {
+        logger.info(`add to database [trans: ${transaction}]: [${JSON.stringify(objects)}], collection: ${collection}`);
         if (!objects || !collection) {
             return undefined;
         }
@@ -23,20 +33,37 @@ module.exports = {
 
                     o.last_modified = DateTime.utc().toMillis();
 
+                    if (transaction) {
+                        await transaction.update(rootRef.doc(docId), o);
+                    } else {
+                        rootRef.doc(docId).update(o);
+                    }
+/*
                     await firestore.runTransaction(async (t) => {
                         t.update(rootRef.doc(docId), o);
                     });
+*/
                 } else {
                     logger.debug('adding: ' + JSON.stringify(o));
 
                     o.created = DateTime.utc().toMillis();
                     o.last_modified = o.created;
 
+                    const newObjectRef = rootRef.doc();
+                    if (transaction) {
+                        await transaction.set(newObjectRef, o);
+                    } else {
+                        newObjectRef.set(o);
+                    }
+                    o.id = newObjectRef.id;
+
+/*
                     await firestore.runTransaction(async (t) => {
                         const newObjectRef = rootRef.doc();
                         await t.set(newObjectRef, o);
                         o.id = newObjectRef.id;
                     });
+*/
                 }
             }
         }
@@ -64,11 +91,14 @@ module.exports = {
                     o.last_modified = DateTime.utc().toMillis();
 
                     if (transaction) {
-                        transaction.update(rootRef.doc(docId), o);
+                        await transaction.update(rootRef.doc(docId), o);
                     } else {
+                        rootRef.doc(docId).update(o);
+/*
                         await firestore.runTransaction(async (t) => {
                             t.update(rootRef.doc(docId), o);
                         });
+*/
                     }
                 } else {
                     logger.debug('adding: ' + JSON.stringify(o));
@@ -76,17 +106,20 @@ module.exports = {
                     o.created = DateTime.utc().toMillis();
                     o.last_modified = o.created;
 
+                    const newObjectRef = rootRef.doc();
                     if (transaction) {
-                        const newObjectRef = rootRef.doc();
                         await transaction.set(newObjectRef, o);
-                        o.id = newObjectRef.id;
                     } else {
+                        newObjectRef.set(o);
+/*
                         await firestore.runTransaction(async (t) => {
                             const newObjectRef = rootRef.doc();
                             await t.set(newObjectRef, o);
                             o.id = newObjectRef.id;
                         });
+*/
                     }
+                    o.id = newObjectRef.id;
                 }
             }
         }
@@ -120,8 +153,7 @@ module.exports = {
         return object;
     },
 
-
-    paginateQueryInDatabase: function (queries, collection, orderBys, limit, startAfterKeys) {
+    paginateQueryInDatabase: async function (queries, collection, orderBys, limit, startAfterKeys, transaction) {
         logger.debug(`paginate in ${collection}: queries = [${JSON.stringify(queries)}]`);
         logger.debug(`paginate in ${collection}: orderBys = [${JSON.stringify(orderBys)}]`);
         logger.debug(`paginate in ${collection}: limit = [${JSON.stringify(limit)}]`);
@@ -156,8 +188,20 @@ module.exports = {
             ref = ref.startAfter(startAfterKeys)
         }
 
-        return new Promise(function(resolve) {
-            ref.get().then(function (snapshot) {
+        return new Promise(async function(resolve) {
+            let snapshot = null;
+            if (transaction) {
+                snapshot = await transaction.get(ref);
+            } else {
+                snapshot = await ref.get();
+            }
+
+            if (!snapshot.exists) {
+                resolve({
+                    data: null,
+                    endOfPagination: true,
+                });
+            } else {
                 let objects = [];
                 snapshot.forEach(function (doc) {
                     let o = doc.data();
@@ -179,18 +223,16 @@ module.exports = {
                         endOfPagination: true,
                     })
                 }
-            })
+            }
         });
     },
 
-    queryInDatabase: function (queries, collection, orderBys) {
+    queryInDatabase: async function (queries, collection, orderBys, transaction) {
         logger.debug(`query in database: [${JSON.stringify(queries)}], collection: ${collection}`);
 
         let firestore = firebase.firestore();
 
-        let dbRef = firestore.collection(collection);
-
-        let ref = dbRef;
+        let ref = firestore.collection(collection);
         if (queries) {
             queries.forEach(function (q) {
                 ref = ref.where(q.key, q.op, q.value);
@@ -208,8 +250,17 @@ module.exports = {
             });
         }
 
-        return new Promise(function(resolve) {
-            ref.get().then(function (snapshot) {
+        return new Promise(async function(resolve) {
+            let snapshot = null;
+            if (transaction) {
+                snapshot = await transaction.get(ref);
+            } else {
+                snapshot = await ref.get();
+            }
+
+            if (!snapshot.exists) {
+                resolve(null);
+            } else {
                 let objects = [];
                 snapshot.forEach(function (doc) {
                     let o = doc.data();
@@ -220,17 +271,22 @@ module.exports = {
                 });
 
                 resolve(objects);
-            })
+            }
         });
     },
 
-    queryOneInDatabase: async function (key, value, collection) {
+    queryOneInDatabaseByKey: async function (key, value, collection, transaction) {
         let queries = this.getQueryForPrimaryKey(key, value);
+
+        return await this.queryOneInDatabase(queries, collection, transaction);
+    },
+
+    queryOneInDatabase: async function (queries, collection, transaction) {
         let self = this;
 
         return new Promise(function (resolve){
-            self.queryInDatabase(queries, collection).then(function (objects) {
-                logger.debug(`objects [${key}: ${value}] found in collection [${collection}] : ${JSON.stringify(objects)}`);
+            self.queryInDatabase(queries, collection, null, transaction).then(function (objects) {
+                logger.debug(`objects [${JSON.stringify(queries)}] found in collection [${collection}] : ${JSON.stringify(objects)}`);
                 if (objects && objects.length > 0) {
                     resolve(objects[0]);
                 } else {
@@ -240,39 +296,40 @@ module.exports = {
         });
     },
 
-    deleteDocument: function (docId, collection) {
+    deleteDocument: async function (docId, collection, transaction) {
         logger.debug(`delete document [${docId}] from collection [${collection}]`);
 
         let firestore = firebase.firestore();
 
-        return new Promise((resolve, reject) => {
-            firestore.collection(collection).doc(docId).delete().then(function () {
-                logger.debug(`document [${docId}] is deleted successfully.`)
-                resolve();
-            }).catch(function (e) {
-                logger.error(`failed to delete document [${docId}]: ${e}`);
-                reject(e)
-            });
-        });
+        let ref = firestore.collection(collection).doc(docId);
+
+        try {
+            if (transaction) {
+                await transaction.delete(ref);
+            } else {
+                await ref.delete();
+            }
+
+            return true;
+        } catch (e) {
+            logger.error(`failed to delete document [${docId}]: ${e}`);
+            return false;
+        }
     },
 
-    deleteCollection: function (queries, collection) {
+    deleteCollection: async function (queries, collection, transaction) {
         logger.debug(`delete collection ${collection} with query: ${JSON.stringify(queries)}`);
 
         let firestore = firebase.firestore();
 
-        let dbRef = firestore.collection(collection);
-
-        let ref = dbRef;
+        let ref = firestore.collection(collection);
         if (queries) {
             queries.forEach(function (q) {
                 ref = ref.where(q.key, q.op, q.value);
             });
         }
 
-        return new Promise((resolve, reject) => {
-            deleteQueryBatch(ref, 10, resolve, reject);
-        });
+        await deleteQueryBatch(ref, 10, transaction);
     },
 
     detachDBProperties: function (object) {
@@ -297,36 +354,27 @@ module.exports = {
 
 };
 
-function deleteQueryBatch(dbRef, batchSize, resolve, reject) {
+async function deleteQueryBatch(queryRef, batchSize, transaction = null) {
+    const snapshot = await queryRef.limit(batchSize).get();
 
-    dbRef.get()
-        .then((snapshot) => {
-            // When there are no documents left, we are done
-            if (snapshot.size == 0) {
-                return 0;
-            }
+    // When there are no documents left, we are done
+    if (snapshot.size === 0) {
+        return;
+    }
 
-            let firestore = firebase.firestore();
+    let firestore = firebase.firestore();
 
-            // Delete documents in a batch
-            let batch = firestore.batch();
-            snapshot.docs.forEach((doc) => {
-                batch.delete(doc.ref);
-            });
+    // Delete documents in a batch
+    if (transaction) {
+        // If a transaction is provided, use it to delete documents
+        snapshot.docs.forEach(doc => transaction.delete(doc.ref));
+    } else {
+        // If no transaction is provided, perform a standalone batch delete
+        const batch = firestore().batch();
+        snapshot.docs.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+    }
 
-            return batch.commit().then(() => {
-                return snapshot.size;
-            });
-        }).then((numDeleted) => {
-            if (numDeleted === 0) {
-                resolve();
-                return;
-            }
-
-            // Recurse on the next process tick, to avoid
-            // exploding the stack.
-            process.nextTick(() => {
-                deleteQueryBatch(dbRef, batchSize, resolve, reject);
-            });
-        }).catch(reject);
+    // Recurse on the next process tick, to avoid exploding the stack.
+    process.nextTick(() => deleteQueryBatch(queryRef, batchSize, transaction));
 }

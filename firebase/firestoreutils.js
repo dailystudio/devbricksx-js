@@ -15,7 +15,7 @@ module.exports = {
     },
 
     addAllToDatabase: async function (objects, collection, transaction) {
-        logger.info(`add to database [trans: ${transaction}]: [${JSON.stringify(objects)}], collection: ${collection}`);
+        logger.info(`[TRANS: ${transaction != null}] add to database : [${JSON.stringify(objects)}], collection: ${collection}`);
         if (!objects || !collection) {
             return undefined;
         }
@@ -38,11 +38,11 @@ module.exports = {
                     } else {
                         rootRef.doc(docId).update(o);
                     }
-/*
-                    await firestore.runTransaction(async (t) => {
-                        t.update(rootRef.doc(docId), o);
-                    });
-*/
+                    /*
+                                        await firestore.runTransaction(async (t) => {
+                                            t.update(rootRef.doc(docId), o);
+                                        });
+                    */
                 } else {
                     logger.debug('adding: ' + JSON.stringify(o));
 
@@ -57,13 +57,13 @@ module.exports = {
                     }
                     o.id = newObjectRef.id;
 
-/*
-                    await firestore.runTransaction(async (t) => {
-                        const newObjectRef = rootRef.doc();
-                        await t.set(newObjectRef, o);
-                        o.id = newObjectRef.id;
-                    });
-*/
+                    /*
+                                        await firestore.runTransaction(async (t) => {
+                                            const newObjectRef = rootRef.doc();
+                                            await t.set(newObjectRef, o);
+                                            o.id = newObjectRef.id;
+                                        });
+                    */
                 }
             }
         }
@@ -72,7 +72,7 @@ module.exports = {
     },
 
     insertOrUpdateAllInDatabase: async function (objects, collection, transaction) {
-        logger.info(`add to database [tran: ${transaction != null}]: [${JSON.stringify(objects)}], collection: ${collection}`);
+        logger.info(`[TRANS: ${transaction != null}] add to database: [${JSON.stringify(objects)}], collection: ${collection}`);
         if (!objects || !collection) {
             return undefined;
         }
@@ -94,11 +94,11 @@ module.exports = {
                         await transaction.update(rootRef.doc(docId), o);
                     } else {
                         rootRef.doc(docId).update(o);
-/*
-                        await firestore.runTransaction(async (t) => {
-                            t.update(rootRef.doc(docId), o);
-                        });
-*/
+                        /*
+                                                await firestore.runTransaction(async (t) => {
+                                                    t.update(rootRef.doc(docId), o);
+                                                });
+                        */
                     }
                 } else {
                     logger.debug('adding: ' + JSON.stringify(o));
@@ -111,13 +111,13 @@ module.exports = {
                         await transaction.set(newObjectRef, o);
                     } else {
                         newObjectRef.set(o);
-/*
-                        await firestore.runTransaction(async (t) => {
-                            const newObjectRef = rootRef.doc();
-                            await t.set(newObjectRef, o);
-                            o.id = newObjectRef.id;
-                        });
-*/
+                        /*
+                                                await firestore.runTransaction(async (t) => {
+                                                    const newObjectRef = rootRef.doc();
+                                                    await t.set(newObjectRef, o);
+                                                    o.id = newObjectRef.id;
+                                                });
+                        */
                     }
                     o.id = newObjectRef.id;
                 }
@@ -128,7 +128,7 @@ module.exports = {
     },
 
     getDocumentInDatabase: async function (collection, docId, transaction) {
-        logger.debug(`get document [${docId}] in collection [${transaction != null}]: ${collection}`);
+        logger.debug(`[TRANS: ${transaction != null}] get document [${docId}] in collection: ${collection}`);
 
         let firestore = firebase.firestore();
 
@@ -154,10 +154,10 @@ module.exports = {
     },
 
     paginateQueryInDatabase: async function (queries, collection, orderBys, limit, startAfterKeys, transaction) {
-        logger.debug(`paginate in ${collection}: queries = [${JSON.stringify(queries)}]`);
-        logger.debug(`paginate in ${collection}: orderBys = [${JSON.stringify(orderBys)}]`);
-        logger.debug(`paginate in ${collection}: limit = [${JSON.stringify(limit)}]`);
-        logger.debug(`paginate in ${collection}: startAfterKeys = [${JSON.stringify(startAfterKeys)}]`);
+        logger.debug(`[TRANS: ${transaction != null}] paginate in ${collection}: queries = [${JSON.stringify(queries)}]`);
+        logger.debug(`[TRANS: ${transaction != null}] paginate in ${collection}: orderBys = [${JSON.stringify(orderBys)}]`);
+        logger.debug(`[TRANS: ${transaction != null}] paginate in ${collection}: limit = [${JSON.stringify(limit)}]`);
+        logger.debug(`[TRANS: ${transaction != null}] paginate in ${collection}: startAfterKeys = [${JSON.stringify(startAfterKeys)}]`);
 
         let firestore = firebase.firestore();
 
@@ -196,83 +196,37 @@ module.exports = {
                 snapshot = await ref.get();
             }
 
-            if (!snapshot.exists) {
+            let objects = [];
+            snapshot.forEach(function (doc) {
+                let o = doc.data();
+
+                o.id = doc.id;
+                objects.push(o);
+            });
+
+            logger.debug(`found ${objects.length} objects.`);
+            if (limit) {
+                let endOfPagination = (objects.length < limit + 1);
                 resolve({
-                    data: null,
-                    endOfPagination: true,
-                });
+                    data: objects.slice(0, limit),
+                    endOfPagination: endOfPagination,
+                })
             } else {
-                let objects = [];
-                snapshot.forEach(function (doc) {
-                    let o = doc.data();
-
-                    o.id = doc.id;
-                    objects.push(o);
-                });
-
-                logger.debug(`found ${objects.length} objects.`);
-                if (limit) {
-                    let endOfPagination = (objects.length < limit + 1);
-                    resolve({
-                        data: objects.slice(0, limit),
-                        endOfPagination: endOfPagination,
-                    })
-                } else {
-                    resolve({
-                        data: objects,
-                        endOfPagination: true,
-                    })
-                }
+                resolve({
+                    data: objects,
+                    endOfPagination: true,
+                })
             }
         });
     },
 
     queryInDatabase: async function (queries, collection, orderBys, transaction) {
-        logger.debug(`query in database: [${JSON.stringify(queries)}], collection: ${collection}`);
+        logger.debug(`[TRANS: ${transaction != null}] query in database: [${JSON.stringify(queries)}], collection: ${collection}`);
 
-        let firestore = firebase.firestore();
+        let ret = await this.paginateQueryInDatabase(queries, collection, orderBys,
+            null, null, transaction);
 
-        let ref = firestore.collection(collection);
-        if (queries) {
-            queries.forEach(function (q) {
-                ref = ref.where(q.key, q.op, q.value);
-            });
-        }
-
-        if (orderBys) {
-            orderBys.forEach(function (o) {
-                let order ="asc";
-                if (o.order) {
-                    order = o.order;
-                }
-
-                ref = ref.orderBy(o.key, order);
-            });
-        }
-
-        return new Promise(async function(resolve) {
-            let snapshot = null;
-            if (transaction) {
-                snapshot = await transaction.get(ref);
-            } else {
-                snapshot = await ref.get();
-            }
-
-            if (!snapshot.exists) {
-                resolve(null);
-            } else {
-                let objects = [];
-                snapshot.forEach(function (doc) {
-                    let o = doc.data();
-
-                    o.id = doc.id;
-                    logger.debug(`found object[${doc.id}]: ${JSON.stringify(o)}`);
-                    objects.push(o);
-                });
-
-                resolve(objects);
-            }
-        });
+        return ret.data;
     },
 
     queryOneInDatabaseByKey: async function (key, value, collection, transaction) {
@@ -297,7 +251,7 @@ module.exports = {
     },
 
     deleteDocument: async function (docId, collection, transaction) {
-        logger.debug(`delete document [${docId}] from collection [${collection}]`);
+        logger.debug(`[TRANS: ${transaction != null}] delete document [${docId}] from collection: [${collection}]`);
 
         let firestore = firebase.firestore();
 
@@ -318,7 +272,7 @@ module.exports = {
     },
 
     deleteCollection: async function (queries, collection, transaction) {
-        logger.debug(`delete collection ${collection} with query: ${JSON.stringify(queries)}`);
+        logger.debug(`[TRANS: ${transaction != null}] delete collection ${collection} with query: ${JSON.stringify(queries)}`);
 
         let firestore = firebase.firestore();
 

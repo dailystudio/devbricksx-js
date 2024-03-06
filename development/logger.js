@@ -63,7 +63,13 @@ module.exports = {
     },
 
     enableDebugOutputs: function(argv) {
-        if (argv[CMD_ARG_VERBOSE]) {
+        let verbose = argv[CMD_ARG_VERBOSE];
+        if (!verbose) {
+            verbose = argv[CMD_ARG_VERBOSE.toUpperCase()];
+        }
+        this.info(`verbose = ${verbose}`)
+
+        if (verbose) {
             this.setDebugEnabled(true)
         } else {
             this.setDebugEnabled(false)
